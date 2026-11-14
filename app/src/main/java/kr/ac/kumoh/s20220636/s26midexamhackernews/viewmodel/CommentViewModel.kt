@@ -1,37 +1,41 @@
 package kr.ac.kumoh.s20220636.s26midexamhackernews.viewmodel
 
-import android.util.Log
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kr.ac.kumoh.s20220636.s26midexamhackernews.model.NewsItem
 import kr.ac.kumoh.s20220636.s26midexamhackernews.repository.NewsRepository
+import kr.ac.kumoh.s20220636.s26midexamhackernews.translation.KoreanTranslator
+import kr.ac.kumoh.s20220636.s26midexamhackernews.translation.TextTranslator
 
 class CommentViewModel(
     private val text: String,
     private val kids: List<Long>,
-    private val repository: NewsRepository
-) : ViewModel() {
-    private val _title = MutableStateFlow<String>(text)
-    val title = _title.asStateFlow()
+    private val repository: NewsRepository,
+    private val translator: TextTranslator = KoreanTranslator,
+) : NewsListViewModel(translator) {
 
-    private val _comments = MutableStateFlow<List<NewsItem>>(emptyList())
-    val comments = _comments.asStateFlow()
+    override val logTag = "Comments"
+
+    // 상단에 보여줄 원글 제목 / 상위 댓글의 번역문
+    private val _translatedHeader = MutableStateFlow<String?>(null)
+    val translatedHeader = _translatedHeader.asStateFlow()
+
+    override suspend fun fetch(): List<NewsItem> =
+        repository.getComments(kids) ?: emptyList()
+
+    override fun textOf(item: NewsItem) = item.text
+
+    fun translateHeader() {
+        if (_translatedHeader.value != null || text.isBlank()) return
+        viewModelScope.launch {
+            runCatching { translator.translate(text) }
+                .onSuccess { _translatedHeader.value = it }
+        }
+    }
 
     init {
-        Log.d("Comments", text)
-        Log.d("Comments", kids.toString())
-        viewModelScope.launch {
-            try {
-                val comments = repository.getComments(kids)
-
-                _comments.value = comments ?: emptyList()
-                Log.d("Comments", _comments.value.toString())
-            } catch (e: Exception) {
-                Log.e("Comments", "댓글 로딩 실패", e)
-            }
-        }
+        load()
     }
 }

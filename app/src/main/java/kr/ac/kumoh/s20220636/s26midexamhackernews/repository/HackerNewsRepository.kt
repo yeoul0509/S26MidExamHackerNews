@@ -22,7 +22,7 @@ class HackerNewsRepository (
 
         private val newsService: NewsApi by lazy {
             Retrofit.Builder()
-                .baseUrl(" https://hacker-news.firebaseio.com/v0/")
+                .baseUrl("https://hacker-news.firebaseio.com/v0/")
                 .addConverterFactory(
                     jsonConfig.asConverterFactory("application/json".toMediaType())
                 )
@@ -83,6 +83,7 @@ class HackerNewsRepository (
             contentText,
             Html.FROM_HTML_MODE_LEGACY)
             .toString()
+            .trim()
 
         return NewsItem(
             id = dto.id,

@@ -1,28 +1,27 @@
 package kr.ac.kumoh.s20220636.s26midexamhackernews.viewmodel
 
-import android.util.Log
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import kr.ac.kumoh.s20220636.s26midexamhackernews.model.NewsItem
 import kr.ac.kumoh.s20220636.s26midexamhackernews.repository.NewsRepository
+import kr.ac.kumoh.s20220636.s26midexamhackernews.translation.KoreanTranslator
+import kr.ac.kumoh.s20220636.s26midexamhackernews.translation.TextTranslator
 
 class TopNewsViewModel(
-    private val repository: NewsRepository
-) : ViewModel() {
-    private val _news = MutableStateFlow<List<NewsItem>>(emptyList())
-    val news = _news.asStateFlow()
+    private val repository: NewsRepository,
+    translator: TextTranslator = KoreanTranslator,
+) : NewsListViewModel(translator) {
+
+    override val logTag = "TopNews"
+
+    override suspend fun fetch(): List<NewsItem> {
+        val stories = repository.getTopStories(30)
+        // 전체 요청이 실패한 경우 에러 화면을 보여주기 위해 예외 발생
+        if (stories.isEmpty()) throw IllegalStateException("No stories")
+        return stories
+    }
+
+    override fun textOf(item: NewsItem) = item.title
 
     init {
-        viewModelScope.launch {
-            try {
-                _news.value = repository.getTopStories(30)
-                Log.d("TopNews", _news.value.toString())
-            } catch (e: Exception) {
-                Log.e("TopNews", "뉴스 로딩 실패", e)
-            }
-        }
+        load()
     }
 }

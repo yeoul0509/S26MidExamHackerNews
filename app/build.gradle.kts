@@ -57,6 +57,10 @@ dependencies {
     // https://github.com/coil-kt/coil/releases
     implementation("io.coil-kt.coil3:coil-compose:3.6.3")
     implementation("io.coil-kt.coil3:coil-network-okhttp:3.6.3")
+
+    // ML Kit 온디바이스 번역 (영어 → 한국어)
+    // https://developers.google.com/ml-kit/language/translation/android
+    implementation("com.google.mlkit:translate:17.0.3")
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)

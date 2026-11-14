@@ -4,14 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -37,42 +35,43 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MainScreen() {
-    val repository = HackerNewsRepository()
+    val repository = remember { HackerNewsRepository() }
     val backStack = rememberNavBackStack(NewsRoute.TopNews)
 
-    Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-        NavDisplay(
-            modifier = Modifier.padding(innerPadding),
-            backStack = backStack,
+    // 한국어 번역 보기 여부 (모든 화면에서 공유, 화면 회전에도 유지)
+    var showKorean by rememberSaveable { mutableStateOf(false) }
 
-            entryDecorators = listOf(
-                rememberSaveableStateHolderNavEntryDecorator(),
-                rememberViewModelStoreNavEntryDecorator()
-            ),
-            entryProvider = entryProvider{
-                entry<NewsRoute.TopNews> {
-                    NewsListScreen(
-                        repository = repository,
-                        onNavigateToComment = { title, kids ->
-                            backStack.add(
-                                NewsRoute.NewsComment(title, kids)
-                            )
-                        }
-                    )
-                }
-                entry<NewsRoute.NewsComment> { route ->
-                    CommentListScreen(
-                        text = route.text,
-                        kids = route.kids,
-                        repository = repository,
-                        onNavigateToComment = { text, kids ->
-                            backStack.add(
-                                NewsRoute.NewsComment(text, kids)
-                            )
-                        }
-                    )
-                }
+    NavDisplay(
+        backStack = backStack,
+        onBack = { backStack.removeLastOrNull() },
+        entryDecorators = listOf(
+            rememberSaveableStateHolderNavEntryDecorator(),
+            rememberViewModelStoreNavEntryDecorator()
+        ),
+        entryProvider = entryProvider {
+            entry<NewsRoute.TopNews> {
+                NewsListScreen(
+                    repository = repository,
+                    showKorean = showKorean,
+                    onShowKoreanChange = { showKorean = it },
+                    onNavigateToComment = { title, kids ->
+                        backStack.add(NewsRoute.NewsComment(title, kids))
+                    }
+                )
             }
-        )
-    }
+            entry<NewsRoute.NewsComment> { route ->
+                CommentListScreen(
+                    text = route.text,
+                    kids = route.kids,
+                    repository = repository,
+                    showKorean = showKorean,
+                    onShowKoreanChange = { showKorean = it },
+                    onBack = { backStack.removeLastOrNull() },
+                    onNavigateToComment = { text, kids ->
+                        backStack.add(NewsRoute.NewsComment(text, kids))
+                    }
+                )
+            }
+        }
+    )
 }

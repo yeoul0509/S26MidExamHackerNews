@@ -1,6 +1,6 @@
 ## 중간고사 구현
-1. 중간고사 앱 구현
-2. AI를 사용하여 앱 개선
+1. 중간고사 앱 구현 - master
+2. AI를 사용하여 앱 개선 - claude/code-fix-korean-translation-b5a6e3
 
 <br>
 
